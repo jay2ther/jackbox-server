@@ -1,7 +1,8 @@
 const WebSocket = require('ws');
 
 // Start the server on port 8080
-const wss = new WebSocket.Server({ port: 8080 });
+const PORT = process.env.PORT || 8080;
+const wss = new WebSocket.Server({ port: PORT });
 
 // This object will hold all our active games. 
 // It will look like this: { "ABCD": { host: connection, clients: [conn1, conn2] } }
@@ -99,4 +100,4 @@ wss.on('connection', (ws) => {
     });
 });
 
-console.log("Traffic Cop Server is awake and listening on port 8080...");
+console.log(`Traffic Cop Server is awake and listening on port ${PORT}...`);
