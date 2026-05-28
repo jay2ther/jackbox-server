@@ -42,7 +42,7 @@ wss.on('connection', (ws) => {
             }
         }
 
-        // 3. PHONE SENDS A BUTTON PRESS
+        // 3. UNIVERSAL ROUTER FOR PHONE INPUTS (Bets, Hits, Stands)
         if (data.action === "button_press") {
             const code = ws.roomCode;
             if (code && rooms[code] && rooms[code].host) {
@@ -50,23 +50,20 @@ wss.on('connection', (ws) => {
             }
         }
 
-        // 4. GODOT WHISPERS BACK TO A SPECIFIC PHONE
-       // 4. GODOT WHISPERS BACK TO A SPECIFIC PHONE
+        // 4. UNIVERSAL ROUTER FOR GODOT WHISPERS (Profile loading, Turn states)
         if (data.action === "update_client") {
             const code = ws.roomCode;
             if (code && rooms[code] && ws.isHost) {
                 const targetClient = rooms[code].clients.find(c => c.playerName === data.target_name);
                 if (targetClient) {
-                    // Send exactly the payload Godot created straight to the phone!
+                    // Pass exactly what Godot wrote straight down to that phone
                     targetClient.send(JSON.stringify(data.payload));
-                    
-                    }));
                 }
             }
         }
     });
 
-    // 5. SOMEONE DISCONNECTS
+    // 5. SOMEONE CLOSES THEIR BROWSER
     ws.on('close', () => {
         if (ws.isHost && ws.roomCode) {
             delete rooms[ws.roomCode];
