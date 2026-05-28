@@ -55,6 +55,18 @@ wss.on('connection', (ws) => {
             if (code && rooms[code] && rooms[code].host) {
                 rooms[code].host.send(JSON.stringify({ action: "player_input", payload: data.payload }));
             }
+            // NEW: Allow Godot to whisper stats back to a specific phone
+        if (data.action === "update_client") {
+            const code = ws.roomCode;
+            // Make sure the sender is the Godot Host
+            if (code && rooms[code] && ws.isHost) {
+                // Find the specific phone by their name
+                const targetClient = rooms[code].clients.find(c => c.playerName === data.target_name);
+                if (targetClient) {
+                    // Forward the stats to that specific phone!
+                    targetClient.send(JSON.stringify({ 
+                        action: "profile_loaded", 
+                        currency: data.currency
         }
     });
 
