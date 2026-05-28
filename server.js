@@ -51,14 +51,15 @@ wss.on('connection', (ws) => {
         }
 
         // 4. GODOT WHISPERS BACK TO A SPECIFIC PHONE
+       // 4. GODOT WHISPERS BACK TO A SPECIFIC PHONE
         if (data.action === "update_client") {
             const code = ws.roomCode;
             if (code && rooms[code] && ws.isHost) {
                 const targetClient = rooms[code].clients.find(c => c.playerName === data.target_name);
                 if (targetClient) {
-                    targetClient.send(JSON.stringify({ 
-                        action: "profile_loaded", 
-                        currency: data.currency 
+                    // Send exactly the payload Godot created straight to the phone!
+                    targetClient.send(JSON.stringify(data.payload));
+                    
                     }));
                 }
             }
