@@ -35,14 +35,14 @@ wss.on('connection', (ws) => {
                 rooms[code].clients.push(ws);
                 ws.roomCode = code;
                 ws.isHost = false;
-                ws.playerName = data.name; // Server memorizes the phone's name
+                ws.playerName = data.name; 
                 
                 ws.send(JSON.stringify({ action: "joined", status: "Success" }));
                 rooms[code].host.send(JSON.stringify({ action: "player_joined", name: data.name }));
             }
         }
 
-        // 3. UNIVERSAL ROUTER FOR PHONE INPUTS (Bets, Hits, Stands)
+        // 3. UNIVERSAL ROUTER FOR PHONE INPUTS
         if (data.action === "button_press") {
             const code = ws.roomCode;
             if (code && rooms[code] && rooms[code].host) {
@@ -50,13 +50,22 @@ wss.on('connection', (ws) => {
             }
         }
 
-        // 4. UNIVERSAL ROUTER FOR GODOT WHISPERS (Profile loading, Turn states)
+        // --- NEW: THE ROUTER FOR YOUR HOST DASHBOARD ---
+        if (data.action === "host_command") {
+            const code = ws.roomCode;
+            if (code && rooms[code] && rooms[code].host) {
+                // Pass the secret host commands straight to Godot!
+                rooms[code].host.send(JSON.stringify({ action: "host_command", payload: data.payload }));
+            }
+        }
+        // -----------------------------------------------
+
+        // 4. UNIVERSAL ROUTER FOR GODOT WHISPERS
         if (data.action === "update_client") {
             const code = ws.roomCode;
             if (code && rooms[code] && ws.isHost) {
                 const targetClient = rooms[code].clients.find(c => c.playerName === data.target_name);
                 if (targetClient) {
-                    // Pass exactly what Godot wrote straight down to that phone
                     targetClient.send(JSON.stringify(data.payload));
                 }
             }
