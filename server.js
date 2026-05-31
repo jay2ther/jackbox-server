@@ -4,28 +4,19 @@ const wss = new WebSocket.Server({ port: port });
 
 let rooms = {};
 
-function generateRoomCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < 4; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         let data;
         try { data = JSON.parse(message); } catch (e) { return; }
 
-        // 1. GODOT HOSTS THE ROOM
+        // 1. GODOT HOSTS THE ROOM (Updated: Godot tells the server the code!)
         if (data.action === "host_room") {
-            const code = generateRoomCode();
+            const code = data.room_code.toUpperCase(); 
             rooms[code] = { host: ws, clients: [] };
             ws.roomCode = code;
             ws.isHost = true;
             ws.send(JSON.stringify({ action: "room_created", room_code: code }));
-            console.log(`Room ${code} created!`);
+            console.log(`Room ${code} established by local Godot engine!`);
         }
 
         // 2. PHONE JOINS THE ROOM
@@ -50,17 +41,15 @@ wss.on('connection', (ws) => {
             }
         }
 
-        // --- NEW: THE ROUTER FOR YOUR HOST DASHBOARD ---
+        // 4. ROUTER FOR HOST DASHBOARD
         if (data.action === "host_command") {
             const code = ws.roomCode;
             if (code && rooms[code] && rooms[code].host) {
-                // Pass the secret host commands straight to Godot!
                 rooms[code].host.send(JSON.stringify({ action: "host_command", payload: data.payload }));
             }
         }
-        // -----------------------------------------------
 
-        // 4. UNIVERSAL ROUTER FOR GODOT WHISPERS
+        // 5. UNIVERSAL ROUTER FOR GODOT WHISPERS
         if (data.action === "update_client") {
             const code = ws.roomCode;
             if (code && rooms[code] && ws.isHost) {
@@ -72,7 +61,6 @@ wss.on('connection', (ws) => {
         }
     });
 
-    // 5. SOMEONE CLOSES THEIR BROWSER
     ws.on('close', () => {
         if (ws.isHost && ws.roomCode) {
             delete rooms[ws.roomCode];
